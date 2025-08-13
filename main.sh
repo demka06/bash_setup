@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PACKAGES=(ufw nano lsof pwgen fail2ban clamav clamav-daemon)
+SERVICES=(clamav-freshclam clamav-daemon)
 
 # ===== ПРОВЕРКА ПРАВ =====
 if [[ $EUID -ne 0 ]]; then
@@ -116,4 +117,16 @@ sudo sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ss
 # ===== ПЕРЕЗАПУСК SSH =====
 sudo systemctl restart ssh
 
-# ===== КОНФИГУРИРОВАНИЕ FAIL2BAN =====
+# ===== ОБНОВЛЕНИЕ БАЗЫ ДАННЫХ ClamAV =====
+sudo systemctl stop clamav-freshclam
+sudo freshclam
+sudo systemctl start clamav-freshclam
+# ОСТАЛЬНОЕ ПАТОМ
+
+# ===== ПРОВЕРКА РАБОТЫ СЕРВИСОВ =====
+
+for srv in "${SERVICES[@]}"; do
+    if [ "$(systemctl is-active "$srv")" != "active" ]; then
+        sudo systemctl start "$srv"
+    fi
+done
