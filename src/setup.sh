@@ -11,8 +11,6 @@ FAIL2BAN_CONFIG="/etc/fail2ban/jail.local"
 
 CRON_JOB="0 0 * * * apt update && apt -y upgrade >> /var/log/auto-update.log 2>&1"
 
-USER_PASS=$(pwgen 32 1)
-
 # ===== ПРОВЕРКА ПРАВ =====
 if [[ $EUID -ne 0 ]]; then
     echo "Запусти скрипт с sudo!"
@@ -101,6 +99,8 @@ if ! crontab -l | grep -Fq "$CRON_JOB"; then
     (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
 fi
 # ===== СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ С ПАРОЛЕМ И SUDO =====
+USER_PASS=$(pwgen 32 1)
+
 adduser --disabled-password --gecos "" "$USER_NAME"
 usermod -aG sudo "$USER_NAME"
 echo "$USER_NAME:$USER_PASS" | chpasswd
