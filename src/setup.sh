@@ -85,7 +85,6 @@ while [[ ! "$PUB_KEY" =~ ^ssh- ]]; do
 done
 
 # ===== ОБНОВЛЕНИЕ СИСТЕМЫ =====
-apt-get update
 if ! apt-get -s upgrade | grep -q "0 upgraded"; then
     DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a  apt-get full-upgrade -y
 fi
