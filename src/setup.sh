@@ -7,12 +7,10 @@ if [[ $EUID -ne 0 ]]; then
 fi
 apt-get update
 apt-get install pwgen -y
-apt install -y rsyslog
-systemctl enable --now rsyslog
 
 USER_PASS=$(pwgen 32 1)
 
-PACKAGES=(ufw nano lsof fail2ban clamav clamav-daemon cron)
+PACKAGES=(ufw nano lsof fail2ban clamav clamav-daemon cron rsyslog)
 SERVICES=(clamav-freshclam clamav-daemon)
 
 CLAMAV_QUARANTINE_DIR="/quarantine"
@@ -94,6 +92,7 @@ for pkg in "${PACKAGES[@]}"; do
         DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y "$pkg"
     fi
 done
+systemctl enable --now rsyslog
 
 curl -fsSL https://get.docker.com | sh
 
