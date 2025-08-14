@@ -1,6 +1,16 @@
 #!/bin/bash
 
-PACKAGES=(ufw nano lsof pwgen fail2ban clamav clamav-daemon git)
+# ===== ПРОВЕРКА ПРАВ =====
+if [[ $EUID -ne 0 ]]; then
+    echo "Запусти скрипт с sudo!"
+    exit 1
+fi
+
+apt-get install pwgen -y
+
+USER_PASS=$(pwgen 32 1)
+
+PACKAGES=(ufw nano lsof fail2ban clamav clamav-daemon git)
 SERVICES=(clamav-freshclam clamav-daemon)
 
 CLAMAV_QUARANTINE_DIR="/quarantine"
@@ -10,12 +20,6 @@ CLAMAV_LOG_FILE="/var/log/clamonacc.log"
 FAIL2BAN_CONFIG="/etc/fail2ban/jail.local"
 
 CRON_JOB="0 0 * * * apt update && apt -y upgrade >> /var/log/auto-update.log 2>&1"
-
-# ===== ПРОВЕРКА ПРАВ =====
-if [[ $EUID -ne 0 ]]; then
-    echo "Запусти скрипт с sudo!"
-    exit 1
-fi
 
 # ===== СОЗДАНИЕ КАРАНТИННОЙ ПАПКИ =====
 if [ ! -d "$CLAMAV_QUARANTINE_DIR" ]; then
@@ -47,8 +51,6 @@ while id "$USER_NAME" &>/dev/null || [[ -z "$USER_NAME" ]]; do
 done
 
 # ===== ПРОВЕРКА =====
-USER_PASS=$(pwgen 32 1)
-
 echo
 echo "===== Данные доступа ====="
 echo "Пользователь: $USER_NAME"
