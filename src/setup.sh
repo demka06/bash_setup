@@ -10,7 +10,7 @@ apt-get install pwgen -y
 
 USER_PASS=$(pwgen 32 1)
 
-PACKAGES=(ufw nano lsof fail2ban clamav clamav-daemon git)
+PACKAGES=(ufw nano lsof fail2ban clamav clamav-daemon git cron)
 SERVICES=(clamav-freshclam clamav-daemon)
 
 CLAMAV_QUARANTINE_DIR="/quarantine"
