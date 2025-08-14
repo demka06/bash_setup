@@ -5,8 +5,10 @@ if [[ $EUID -ne 0 ]]; then
     echo "Запусти скрипт с sudo!"
     exit 1
 fi
-
+apt-get update
 apt-get install pwgen -y
+apt install -y rsyslog
+systemctl enable --now rsyslog
 
 USER_PASS=$(pwgen 32 1)
 
