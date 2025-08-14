@@ -12,7 +12,7 @@ systemctl enable --now rsyslog
 
 USER_PASS=$(pwgen 32 1)
 
-PACKAGES=(ufw nano lsof fail2ban clamav clamav-daemon git cron)
+PACKAGES=(ufw nano lsof fail2ban clamav clamav-daemon cron)
 SERVICES=(clamav-freshclam clamav-daemon)
 
 CLAMAV_QUARANTINE_DIR="/quarantine"
