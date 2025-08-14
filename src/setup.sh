@@ -161,9 +161,10 @@ EOL
 systemctl daemon-reload
 systemctl enable --now clamonacc
 
-echo "Установка завершена!"
+echo
 echo "Лог работы: $CLAMAV_LOG_FILE"
 echo "Карантин: $CLAMAV_QUARANTINE_DIR"
+echo
 
 # ===== НАСТРОЙКА FAIL2BAN =====
 tee "$FAIL2BAN_CONFIG" > /dev/null <<EOL
@@ -188,8 +189,10 @@ maxretry = 5
 EOL
 
 systemctl enable --now fail2ban
+echo
 echo "Fail2Ban установлен и запущен!"
 echo "Конфиг: $FAIL2BAN_CONFIG"
+echo
 
 # ===== ПРОВЕРКА РАБОТЫ СЕРВИСОВ =====
 for srv in "${SERVICES[@]}"; do
