@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGES=(ufw nano lsof pwgen fail2ban clamav clamav-daemon)
+PACKAGES=(ufw nano lsof pwgen fail2ban clamav clamav-daemon git)
 SERVICES=(clamav-freshclam clamav-daemon)
 
 CLAMAV_QUARANTINE_DIR="/quarantine"
