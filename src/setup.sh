@@ -47,6 +47,8 @@ while id "$USER_NAME" &>/dev/null || [[ -z "$USER_NAME" ]]; do
 done
 
 # ===== ПРОВЕРКА =====
+USER_PASS=$(pwgen 32 1)
+
 echo
 echo "===== Данные доступа ====="
 echo "Пользователь: $USER_NAME"
@@ -99,8 +101,6 @@ if ! crontab -l | grep -Fq "$CRON_JOB"; then
     (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
 fi
 # ===== СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ С ПАРОЛЕМ И SUDO =====
-USER_PASS=$(pwgen 32 1)
-
 adduser --disabled-password --gecos "" "$USER_NAME"
 usermod -aG sudo "$USER_NAME"
 echo "$USER_NAME:$USER_PASS" | chpasswd
