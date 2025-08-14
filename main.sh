@@ -5,6 +5,9 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+sudo chmod +x ./src/setup.sh
+sudo chmod +x ./src/add_user.sh
+
 while true; do
     echo "Выберите действие:"
     echo "1) Сконфигурировать сервер"
