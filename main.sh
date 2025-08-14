@@ -3,10 +3,26 @@
 PACKAGES=(ufw nano lsof pwgen fail2ban clamav clamav-daemon)
 SERVICES=(clamav-freshclam clamav-daemon)
 
+CLAMAV_QUARANTINE_DIR="/quarantine"
+CLAMAV_SERVICE_FILE="/etc/systemd/system/clamonacc.service"
+CLAMAV_LOG_FILE="/var/log/clamonacc.log"
+
+FAIL2BAN_CONFIG="/etc/fail2ban/jail.local"
+
+CRON_JOB="0 0 * * * apt update && apt -y upgrade >> /var/log/auto-update.log 2>&1"
+
+USER_PASS=$(pwgen 32 1)
+
 # ===== ПРОВЕРКА ПРАВ =====
 if [[ $EUID -ne 0 ]]; then
     echo "Запусти скрипт с sudo!"
     exit 1
+fi
+
+# ===== СОЗДАНИЕ КАРАНТИННОЙ ПАПКИ =====
+if [ ! -d "$QUARANTINE_DIR" ]; then
+    sudo mkdir -p "$QUARANTINE_DIR"
+    sudo chmod 750 "$QUARANTINE_DIR"
 fi
 
 # ===== УСТАНОВЛЕНИЕ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ =====
@@ -31,9 +47,6 @@ while id "$USER_NAME" &>/dev/null || [[ -z "$USER_NAME" ]]; do
     read -rp "Пользователь уже существует или имя пустое. Введите другое имя: " USER_NAME
     USER_NAME=$(echo "$USER_NAME" | xargs)
 done
-
-# ===== ГЕНЕРАЦИЯ ПАРОЛЯ =====
-USER_PASS=$(pwgen 32 1)
 
 # ===== ПРОВЕРКА =====
 echo
@@ -81,6 +94,12 @@ done
 
 curl -fsSL https://get.docker.com | sh
 
+# ===== АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ ПАКЕТОВ ПО НОЧАМ =====
+# Проверяем, есть ли уже такая задача
+if ! sudo crontab -l | grep -Fq "$CRON_JOB"; then
+    # Добавляем задачу в crontab root
+    (sudo crontab -l 2>/dev/null; echo "$CRON_JOB") | sudo crontab -
+fi
 # ===== СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ С ПАРОЛЕМ И SUDO =====
 sudo adduser --disabled-password --gecos "" "$USER_NAME"
 sudo usermod -aG sudo "$USER_NAME"
@@ -120,13 +139,59 @@ sudo systemctl restart ssh
 # ===== ОБНОВЛЕНИЕ БАЗЫ ДАННЫХ ClamAV =====
 sudo systemctl stop clamav-freshclam
 sudo freshclam
-sudo systemctl start clamav-freshclam
-# ОСТАЛЬНОЕ ПАТОМ
+sudo systemctl enable clamav-freshclam
+
+# ===== РАБОТА ClamAV В ФОНЕ =====
+sudo tee "$CLAMAV_SERVICE_FILE" > /dev/null <<EOL
+[Unit]
+Description=ClamAV On-Access Scanner
+After=clamav-daemon.service
+
+[Service]
+ExecStart=/usr/bin/clamonacc --fdpass --log=$CLAMAV_LOG_FILE --move=$CLAMAV_QUARANTINE_DIR \\
+    --exclude-dir=/proc --exclude-dir=/sys --exclude-dir=/dev --include-dir=/run --include-dir=/home
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now clamonacc
+
+echo "Установка завершена!"
+echo "Лог работы: $CLAMAV_LOG_FILE"
+echo "Карантин: $CLAMAV_QUARANTINE_DIR"
+
+# ===== НАСТРОЙКА FAIL2BAN =====
+sudo tee "$FAIL2BAN_CONFIG" > /dev/null <<EOL
+[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 5
+ignoreip = 127.0.0.1/8 ::1
+
+[sshd]
+enabled = true
+port = "$SSH_PORT"
+filter = sshd
+logpath = /var/log/auth.log
+
+# Защита Nginx (если установлен)
+[nginx-http-auth]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/error.log
+maxretry = 5
+EOL
+
+sudo systemctl enable --now fail2ban
+echo "Fail2Ban установлен и запущен!"
+echo "Конфиг: $FAIL2BAN_CONFIG"
 
 # ===== ПРОВЕРКА РАБОТЫ СЕРВИСОВ =====
-
 for srv in "${SERVICES[@]}"; do
     if [ "$(systemctl is-active "$srv")" != "active" ]; then
-        sudo systemctl start "$srv"
+        sudo systemctl enable --now "$srv"
     fi
 done
