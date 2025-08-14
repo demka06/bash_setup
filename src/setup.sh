@@ -180,12 +180,6 @@ port = "$SSH_PORT"
 filter = sshd
 logpath = /var/log/auth.log
 
-# Защита Nginx (если установлен)
-[nginx-http-auth]
-enabled = true
-port = http,https
-logpath = /var/log/nginx/error.log
-maxretry = 5
 EOL
 
 systemctl enable --now fail2ban
