@@ -5,6 +5,7 @@ if [[ $EUID -ne 0 ]]; then
     echo "Запусти скрипт с sudo!"
     exit 1
 fi
+
 apt-get update
 apt-get install pwgen -y
 
@@ -14,7 +15,6 @@ PACKAGES=(ufw nano lsof fail2ban clamav clamav-daemon cron rsyslog)
 SERVICES=(clamav-freshclam clamav-daemon)
 
 CLAMAV_QUARANTINE_DIR="/quarantine"
-CLAMAV_SERVICE_FILE="/etc/systemd/system/clamonacc.service"
 CLAMAV_LOG_FILE="/var/log/clamonacc.log"
 
 FAIL2BAN_CONFIG="/etc/fail2ban/jail.local"
@@ -144,22 +144,12 @@ freshclam
 systemctl enable clamav-freshclam
 
 # ===== РАБОТА ClamAV В ФОНЕ =====
-tee "$CLAMAV_SERVICE_FILE" > /dev/null <<EOL
-[Unit]
-Description=ClamAV On-Access Scanner
-After=clamav-daemon.service
-
-[Service]
-ExecStart=/usr/bin/clamonacc --fdpass --log=$CLAMAV_LOG_FILE --move=$CLAMAV_QUARANTINE_DIR \\
-    --exclude-dir=/proc --exclude-dir=/sys --exclude-dir=/dev --include-dir=/run --include-dir=/home
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-EOL
+if ! grep -q "^ScanOnAccess yes" /etc/clamav/clamd.conf; then
+    echo "ScanOnAccess yes" >> /etc/clamav/clamd.conf
+fi
 
 systemctl daemon-reload
-systemctl enable --now clamonacc
+systemctl enable --now clamav-daemon
 
 echo
 echo "Лог работы: $CLAMAV_LOG_FILE"
@@ -179,7 +169,6 @@ enabled = true
 port = "$SSH_PORT"
 filter = sshd
 logpath = /var/log/auth.log
-
 EOL
 
 systemctl enable --now fail2ban
