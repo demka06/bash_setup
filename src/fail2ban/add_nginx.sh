@@ -9,15 +9,13 @@ if [[ $EUID -ne 0 ]]; then
     echo
     exit 1
 fi
-export PATH=$PATH:/usr/sbin:/sbin:/usr/local/sbin
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-NGINX_BIN=$(command -v nginx 2>/dev/null || true)
 
 # ===== ПРОВЕРКА NGINX =====
-if [[ -z "$NGINX_BIN" ]]; then
+if ! dpkg -l nginx &> /dev/null; then
     echo "Nginx не установлен. Выполняется установка"
-    "$SCRIPT_DIR"/src/nginx/setup_nginx.sh
+    "$SCRIPT_DIR/../nginx/setup_nginx.sh"
     echo
 fi
 
