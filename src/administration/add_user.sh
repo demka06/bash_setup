@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 USER_PASS=$(pwgen 32 1)
 
 # ===== ПРОВЕРКА ПРАВ =====
@@ -7,6 +8,7 @@ if [[ $EUID -ne 0 ]]; then
     echo "Запусти скрипт с sudo!"
     exit 1
 fi
+
 # ===== ПОЛУЧЕНИЕ ИМЕНИ ПОЛЬЗОВАТЕЛЯ =====
 read -rp "Введите имя нового пользователя: " USER_NAME
 USER_NAME=$(echo "$USER_NAME" | xargs)

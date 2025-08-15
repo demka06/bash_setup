@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # ===== ПРОВЕРКА ПРАВ =====
 if [[ $EUID -ne 0 ]]; then
     echo "Запусти скрипт с sudo!"
@@ -183,3 +185,8 @@ for srv in "${SERVICES[@]}"; do
         systemctl enable --now "$srv"
     fi
 done
+
+
+# дописать установку жаббикса, добавление ufw правил для жаббикса и nginx
+# дописать добавление блока nginx в fail2ban
+# https://chatgpt.com/c/689e1393-4588-8321-86f5-079871a5a995
