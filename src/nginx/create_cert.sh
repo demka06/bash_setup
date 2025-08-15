@@ -17,10 +17,10 @@ if ss -tuln | grep -E -q ":80(\s|$)"; then
 fi
 
 # ===== ВЫДАЧА СЕРТИФИКАТА =====
-certbot --standalone -d "$DOMAIN" \
+certbot certonly --standalone -d "$DOMAIN" \
  --non-interactive --agree-tos \
   --force-renewal -m mail@gmail.ru
-  
+
 systemctl start nginx
 
 echo
