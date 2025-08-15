@@ -20,14 +20,19 @@ fi
 certbot --standalone -d "$DOMAIN" \
  --non-interactive --agree-tos \
   --force-renewal -m mail@gmail.ru
-
+  
 systemctl start nginx
+
 echo
 echo "Сертификат для $DOMAIN выдан"
 echo
 
 # ===== ДОБАВЛЕНИЕ ЗАДАЧИ В CRON =====
-(crontab -l 2>/dev/null | grep -Fv "certbot renew"; echo "$CRON_JOB") | crontab -
+if ! crontab -l | grep -Fq "$CRON_JOB"; then
+    # Добавляем задачу в crontab root
+    (crontab -l 2>/dev/null | grep -Fv "certbot renew"; echo "$CRON_JOB") | crontab -
+fi
+
 echo
 echo "Cron настроен для автоматического обновления сертификатов."
 echo

@@ -9,12 +9,16 @@ if [[ $EUID -ne 0 ]]; then
     echo
     exit 1
 fi
+export PATH=$PATH:/usr/sbin:/sbin:/usr/local/sbin
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NGINX_BIN=$(command -v nginx 2>/dev/null || true)
 
 # ===== ПРОВЕРКА NGINX =====
-if ! command -v nginx >/dev/null 2>&1; then
+if [[ -z "$NGINX_BIN" ]]; then
     echo "Nginx не установлен. Выполняется установка"
-    /../nginx/setup_nginx.sh
-    exit 1
+    "$SCRIPT_DIR"/src/nginx/setup_nginx.sh
+    echo
 fi
 
 # ===== СОЗДАНИЕ ФИЛЬТРА =====
