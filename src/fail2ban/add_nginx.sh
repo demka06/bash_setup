@@ -31,8 +31,10 @@ if [ ! -f /etc/fail2ban/jail.local ]; then
     sudo touch /etc/fail2ban/jail.local
 fi
 
-tee -a /etc/fail2ban/jail.local > /dev/null << EOF
+if ! grep -q "^\[nginx-noscript\]" "$FILE"; then
 
+    tee -a /etc/fail2ban/jail.local > /dev/null << EOF
+    
 [nginx-noscript]
 enabled  = true
 port     = http,https
@@ -43,6 +45,7 @@ findtime = 600
 bantime  = 86400
 EOF
 
+
 systemctl restart fail2ban
 
 sudo fail2ban-client status nginx-noscript
@@ -50,3 +53,9 @@ sudo fail2ban-client status nginx-noscript
 echo
 echo "Конфигурирование fail2ban завершено"
 echo
+
+else
+    echo
+    echo "Конфигурирование fail2ban уже производилось"
+    echo
+fi

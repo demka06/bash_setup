@@ -16,7 +16,7 @@ if dpkg -l nginx &> /dev/null; then
 fi
 
 apt-get update
-apt-get install nginx certbot python3-certbot-nginx -y
+DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install nginx certbot python3-certbot-nginx -y
 
 ufw allow 80,443/tcp
 ufw disable
