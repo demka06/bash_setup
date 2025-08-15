@@ -18,6 +18,8 @@ apt-get install nginx certbot python-certbot-nginx -y
 
 ufw allow 443/tcp
 ufw allow 80/tcp
+ufw disable
+ufw enable
 
 echo
 echo "Установлены следующие пакеты: certbot python-certbot-nginx. Открыты 443 и 80 порт"
